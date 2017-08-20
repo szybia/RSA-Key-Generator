@@ -1,4 +1,5 @@
 from random import randrange
+from random import SystemRandom
 
 
 def rabin_miller(number):
@@ -71,19 +72,40 @@ def xgcd(number, mod):
     return x0
 
 
+def padding(plaintext):
+    encoding = ""
+    num_required = 611 - len(str(plaintext))
+    encoding += str(SystemRandom().randrange(int("1" + ("0" * (num_required-1))), int("9" + ("9" * (num_required-1)))))
+    encoding = encoding.replace("0", str(SystemRandom().randrange(1, 9)))
+    encoding = "0002" + encoding + "00"
+    encoding += str(plaintext)
+    return int(encoding)
+
+
+def remove_padding(ciphertext):
+    ciphertext = str(ciphertext)
+    ciphertext = ciphertext[ciphertext.find("00")+2:]
+    return str(hex(int(ciphertext)))[2:]
+
+
 def encryption(plaintext, e, N):
     hex_plain = ""
+    if len(plaintext) > 600:
+        print("Message too long.")
+        return
     for letter in plaintext:
         hex_plain += hex(ord(letter))[2:]
     plaintext = int(hex_plain, 16)
     if len(str(plaintext)) >= len(str(N)):
         print("Text is too long.")
         return
+    plaintext = padding(plaintext)
     return pow(plaintext, e, N)
 
 
 def decryption(ciphertext, d, N):
-    ciphertext = hex(pow(ciphertext, d, N))[2:]
+    ciphertext = pow(ciphertext, d, N)
+    ciphertext = remove_padding(ciphertext)
     cleartext = ""
     i = 0
     for number in range(int(len(ciphertext)/2)):
@@ -139,10 +161,15 @@ if __name__ == "__main__":
 
     # Sample Encryption and Decryption functions
 
-    # ciphertext = encryption("Attack at Dawn.", e, N)
-    # print("\nCipherText: {}".format(ciphertext))
-    # cleartext = decryption(ciphertext, d, N)
-    # print("Cleartext: {}\n".format(cleartext))
+    message = "Attack at Dawn."
+    ciphertext = encryption(message, e, N)
+    print("\nCleartext: {}".format(message))
+    print("CipherText: {}".format(hex(int(ciphertext))))
+    cleartext = decryption(ciphertext, d, N)
+    print("Cleartext: {}\n".format(cleartext))
 
-
-
+    ciphertext = encryption(message, e, N)
+    print("\nCleartext: {}".format(message))
+    print("CipherText: {}".format(hex(int(ciphertext))))
+    cleartext = decryption(ciphertext, d, N)
+    print("Cleartext: {}\n".format(cleartext))
